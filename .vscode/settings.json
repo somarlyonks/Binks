@@ -1,0 +1,12 @@
+{
+  "python.pythonPath": "/home/sy/.pyenv/versions/3.6.0/bin/python",
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "[json]": {
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "editor.tabSize": 2
+  }
+}
