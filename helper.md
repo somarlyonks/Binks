@@ -12,12 +12,14 @@ binks uninstall
 binks unsubscribe
 binks email
 binks email somarl@live.com
-binks frequency Sunday
-binks frequency everyday
+binks schedule Sunday
+binks schedule everyday
 binks threshold 30
 binks locale en_US
 
 ## oauth2
+
+(all fake keys for illustration)
 
 user get code:
 url: https://www.dropbox.com/oauth2/authorize?client_id=5g044eviqwmlsx1&response_type=code

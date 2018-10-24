@@ -16,8 +16,11 @@ def qget():
         return 'timeout'
 
 
-def log(msg):
-    print(msg, qget())
+def log(*msg):
+    print(*msg, qget())
+
+
+proxy = Proxy(PROXY)
 
 
 @main
@@ -25,26 +28,32 @@ def f():
     class C(object):
         def __init__(self, x):
             self.x = x
-            self.https_proxy = 'http://127.0.0.1:8123'
+            self.https_proxy = PROXY
 
         @Proxy
-        def gp(self):
-            log('inst')
+        def gp(self, y=1):
+            log('inst', self.x, y)
+
+        @proxy
+        def gp2(self, y=2):
+            log('inst', self.x, y)
 
         def g(self):
-            log('inst')
+            log('inst', 'it should timeout:')
 
     c = C(1)
     c.gp()
-    c.g()  # make sure this will timeout
-
-    proxy = Proxy(PROXY)
+    c.gp2()
+    c.g()
 
     with proxy:
-        log('with')
+        with proxy:
+            log('with')
+
+    c.g()
 
     @proxy
-    def gp2():
+    def gp3():
         log('func')
 
-    gp2()
+    gp3()
