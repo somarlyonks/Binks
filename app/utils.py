@@ -12,6 +12,7 @@ import requests as q
 
 PROTOCOL = 'https'
 HOST_URL = f'{PROTOCOL}://www.bing.com'
+PROXY = 'http://localhost:8123'
 TIMEOUT = 5
 
 
@@ -25,8 +26,8 @@ def main(fn):
     return fn
 
 
-def q_get(url):
-    r = q.get(HOST_URL + url, timeout=TIMEOUT)
+def q_get(url, stream=True):
+    r = q.get(HOST_URL + url, timeout=TIMEOUT, stream=stream)
     try:
         r.raise_for_status()
     except q.HTTPError:
