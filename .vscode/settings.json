@@ -1,5 +1,5 @@
 {
-  "python.pythonPath": "/home/sy/.pyenv/versions/3.6.0/bin/python",
+  "python.pythonPath": "/home/sy/.virtualenvs/binks/bin/python",
   "editor.tabSize": 4,
   "editor.detectIndentation": false,
   "editor.insertSpaces": true,
