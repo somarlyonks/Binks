@@ -24,6 +24,11 @@ TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 5))
 API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(PERIOD)
 
 
+class Duplicated(ValueError):
+    """to raise when file already exists"""
+    pass
+
+
 def toURI(i):
     return HOST_URL + i
 
@@ -31,7 +36,7 @@ def toURI(i):
 def GET(url):
     with Q.urlopen(toURI(url), timeout=TIMEOUT) as connect:
         if connect.status is not 200:
-            raise E.HTTPError
+            raise E.HTTPError(url, connect.status, 'Manully raised.', connect.headers, None)
         content = connect.read()
         if connect.headers.get_content_type() == 'application/json':
             content = content.decode(connect.headers.get_content_charset())
@@ -40,24 +45,25 @@ def GET(url):
 
 def persist(raw, filename):
     filepath = os.path.join(LOCAL_PATH, filename)
+    if os.path.exists(filepath):
+        raise Duplicated
     with open(filepath, 'wb') as img:
         img.write(raw)
 
 
-def download(url):
+def download(url, name):
     print('[BINKS]: Downloading image -', toURI(url))
     if not url.endswith('.jpg'):
         return print('[BINKS]: Error - wrong extension name.')
 
-    name = url.split('/')[-1].split('_')[0] + '.jpg'
+    name += '.jpg'
     data = GET(url)
     persist(data, name)
 
 
-def record(img):
+def record(img, imgname):
     filename = 'COPYRIGHTS.json'
     filepath = os.path.join(LOCAL_PATH, filename)
-    imgname = img.get('url', '').split('/')[-1].split('_')[0]
     cpright = img.get('copyright', '')
 
     if not os.path.exists(filepath):
@@ -75,6 +81,27 @@ def record(img):
         f.writelines(lines)
 
 
+def worker(imgs, failed, retrying=False):
+    """impure: dynamically changing contexted failed list"""
+    if retrying and len(failed):
+        print('[BINKS]: Retrying the failed tasks.')
+    for img in imgs:
+        try:
+            url = img.get('url', '')
+            name = url.split('/')[-1].split('_')[0]
+            download(url, name)
+            if retrying:
+                failed.pop()
+        except E.HTTPError:
+            print('[BINKS]: Error - wrong response for', toURI(url))
+            if not retrying:
+                failed.append(img)
+        except Duplicated:
+            print('[BINKS]: Image exists -', os.path.join(LOCAL_PATH, name + '.jpg'))
+        else:
+            record(img, name)
+
+
 def main():
     print('[BINKS]: Date:', datetime.now().strftime("%c"))
     try:
@@ -83,25 +110,12 @@ def main():
         print('[BINKS]: Error - failed to fetch api')
         sys.exit(1)
     j = json.loads(r or '{}')
+    images = j.get('images', [])
     failed = []
-    for img in j.get('images', []):
-        try:
-            download(img.get('url', ''))
-        except E.HTTPError:
-            print('[BINKS]: Error - wrong response for', toURI(img))
-            failed.append(img)
-        else:
-            record(img)
-    if len(failed):
-        print('[BINKS]: retrying the failed tasks.')
-        for img in failed[:]:
-            try:
-                download(img.get('url', ''))
-                failed.pop()
-            except E.HTTPError:
-                print('[BINKS]: Error - wrong response for ', toURI(img), 'again.')
+    worker(images, failed)
+    worker(failed[:], failed, retrying=True)
 
-    print('[BINKS]: Done. Total:', PERIOD, ' Failed:', len(failed))
+    print('[BINKS]: Done. Total:', len(images), ' Failed:', len(failed))
     sys.exit(0)
 
 
