@@ -7,11 +7,27 @@ Tested compatible Python versions: 3.7.0b2 / 3.6.0 / 3.5.2 on Linux4.4.0
 Please fire an issue at https://github.com/somarlyonks/Binks/issue if it crashes under Python3
 """
 
+from __future__ import print_function
+
 from datetime import datetime
+from functools import partial
 import json
 import os
 import sys
-from urllib import request as Q, error as E
+
+
+PY_VERSION = sys.version_info
+try:
+    assert PY_VERSION.major == 3
+    from urllib import request as Q, error as E
+except AssertionError:
+    sys.stderr.write('[BINKS]: Error - Python3 required')
+    sys.exit(1)
+try:
+    assert PY_VERSION.minor >= 3  # need more test
+    print = partial(print, flush=True)
+except AssertionError:
+    sys.stdout.write('[BINKS]: Warnning - Python3.3.0+ prefered')
 
 
 PROTOCOL = 'https'
