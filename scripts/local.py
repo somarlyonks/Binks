@@ -1,70 +1,137 @@
-#
+#!/usr/bin/python3
+
+"""
+Author: Sy<somarl@live.com>
+LICENSE: MIT License  Copyright (c) 2018 Sy
+Tested compatible Python versions: 3.7.0b2 / 3.6.0 / 3.5.2 on Linux4.4.0
+Please fire an issue at https://github.com/somarlyonks/Binks/issue if it crashes under Python3
+"""
+
+from __future__ import print_function
 
 from datetime import datetime
+from functools import partial
 import json
 import os
 import sys
-from urllib import request as Q, error as E
+
+
+PY_VERSION = sys.version_info
+try:
+    assert PY_VERSION.major == 3
+    from urllib import request as Q, error as E
+except AssertionError:
+    sys.stderr.write('[BINKS]: Error - Python3 required')
+    sys.exit(1)
+try:
+    assert PY_VERSION.minor >= 3  # need more test
+    print = partial(print, flush=True)
+except AssertionError:
+    sys.stdout.write('[BINKS]: Warnning - Python3.3.0+ prefered')
 
 
 PROTOCOL = 'https'
-HOST_URL = f'{PROTOCOL}://www.bing.com'
+HOST_URL = PROTOCOL + '://www.bing.com'
 
-FREQUENCY = os.getenv('BINKS_LOCAL_FREQUENCY', 1)
+PERIOD = os.getenv('BINKS_LOCAL_PERIOD', 1)
 LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', '/srv/Binks/local')
-TIMEOUT = os.getenv('BINKS_LOCAL_TIMEOUT', 5)
+TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 5))
 
-API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(FREQUENCY)
+API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(PERIOD)
+
+
+class Duplicated(ValueError):
+    """to raise when file already exists"""
+    pass
+
+
+def toURI(i):
+    return HOST_URL + i
 
 
 def GET(url):
-    with Q.urlopen(HOST_URL + url, timeout=TIMEOUT) as connect:
+    with Q.urlopen(toURI(url), timeout=TIMEOUT) as connect:
         if connect.status is not 200:
-            raise E.HTTPError
-        return connect.read()
+            raise E.HTTPError(url, connect.status, 'Manully raised.', connect.headers, None)
+        content = connect.read()
+        if connect.headers.get_content_type() == 'application/json':
+            content = content.decode(connect.headers.get_content_charset())
+        return content
 
 
-def persist(raw, filename):
-    filepath = LOCAL_PATH + ('' if LOCAL_PATH.endswith('/') else '/') + filename
-    with open(filepath, 'wb') as img:
-        img.write(raw)
-
-
-def download(url):
-    print(f'[BINKS]: Downloading image - {HOST_URL + url}')
+def download(url, name):
+    """intentionally print the image url first and then raise exceptions"""
+    print('[BINKS]: Downloading image -', toURI(url))
     if not url.endswith('.jpg'):
         return print('[BINKS]: Error - wrong extension name.')
 
-    name = url.split('/')[-1]
+    name += '.jpg'
+    filepath = os.path.join(LOCAL_PATH, name)
+    if os.path.exists(filepath):
+        raise Duplicated
+
     data = GET(url)
-    persist(data, name)
+    with open(filepath, 'wb') as img:
+        img.write(data)
+
+
+def record(img, imgname):
+    filename = 'COPYRIGHTS.json'
+    filepath = os.path.join(LOCAL_PATH, filename)
+    cpright = img.get('copyright', '')
+
+    if not os.path.exists(filepath):
+        with open(filepath, 'wt') as f:
+            f.write('[' + os.linesep + ']')
+
+    lines = open(filepath, 'rt').readlines()
+    line = '{"image": "' + imgname + '", ' + '"copyright": "' + cpright + '"}'
+    if len(lines) != 2:
+        line += ','
+    line += os.linesep
+    lines.insert(1, line)
+
+    with open(filepath, 'wt') as f:
+        f.writelines(lines)
+
+
+def worker(imgs, failed, retrying=False):
+    """impure: dynamically changing contexted failed list"""
+    if retrying and len(failed):
+        print('[BINKS]: Retrying the failed tasks.')
+    for img in imgs:
+        try:
+            url = img.get('url', '')
+            name = url.split('/')[-1].split('_')[0]
+            download(url, name)
+            if retrying:
+                failed.pop()
+        except E.HTTPError:
+            print('[BINKS]: Error - wrong response for', toURI(url))
+            if not retrying:
+                failed.append(img)
+        except Duplicated:
+            print('[BINKS]: Image exists -', os.path.join(LOCAL_PATH, name + '.jpg'))
+        else:
+            record(img, name)
 
 
 def main():
-    print(f'[BINKS]: Date: {datetime.now().strftime("%c")}')
+    print('[BINKS]: Date:', datetime.now().strftime("%c"))
     try:
         r = GET(API)
     except E.HTTPError:
-        print(f'[BINKS]: Error - failed to fetch api')
+        print('[BINKS]: Error - failed to fetch api')
         sys.exit(1)
-    j = json.loads(r or '{}')
-    failed = []
-    for img in j.get('images', []):
-        try:
-            download(img.get('url', ''))
-        except E.HTTPError:
-            print(f'[BINKS]: Error - wrong response for {HOST_URL + img}')
-            failed.append(img)
-    if len(failed):
-        print('[BINKS]: retrying the failed tasks.')
-        for img in failed[:]:
-            try:
-                download(img.get('url', ''))
-                failed.pop()
-            except E.HTTPError:
-                print(f'[BINKS]: Error - wrong response for {HOST_URL + img} again.')
 
-    print(f'[BINKS]: Total: {FREQUENCY} , Failed: {len(failed)}')
+    j = json.loads(r or '{}')
+    images = j.get('images', [])
+    failed = []
+
+    worker(images, failed)
+    worker(failed[:], failed, retrying=True)
+
+    print('[BINKS]: Done. Total:', len(images), ' Failed:', len(failed))
     sys.exit(0)
 
 
