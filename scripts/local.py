@@ -39,7 +39,7 @@ def GET(url):
 
 
 def persist(raw, filename):
-    filepath = LOCAL_PATH + ('' if LOCAL_PATH.endswith('/') else '/') + filename
+    filepath = os.path.join(LOCAL_PATH, filename)
     with open(filepath, 'wb') as img:
         img.write(raw)
 
@@ -49,9 +49,30 @@ def download(url):
     if not url.endswith('.jpg'):
         return print('[BINKS]: Error - wrong extension name.')
 
-    name = url.split('/')[-1]
+    name = url.split('/')[-1].split('_')[0] + '.jpg'
     data = GET(url)
     persist(data, name)
+
+
+def record(img):
+    filename = 'COPYRIGHTS.json'
+    filepath = os.path.join(LOCAL_PATH, filename)
+    imgname = img.get('url', '').split('/')[-1].split('_')[0]
+    cpright = img.get('copyright', '')
+
+    if not os.path.exists(filepath):
+        with open(filepath, 'wt') as f:
+            f.write('[' + os.linesep + ']')
+
+    lines = open(filepath, 'rt').readlines()
+    line = '{"image": "' + imgname + '", ' + '"copyright": "' + cpright + '"}'
+    if len(lines) != 2:
+        line += ','
+    line += os.linesep
+    lines.insert(1, line)
+
+    with open(filepath, 'wt') as f:
+        f.writelines(lines)
 
 
 def main():
@@ -69,6 +90,8 @@ def main():
         except E.HTTPError:
             print('[BINKS]: Error - wrong response for', toURI(img))
             failed.append(img)
+        else:
+            record(img)
     if len(failed):
         print('[BINKS]: retrying the failed tasks.')
         for img in failed[:]:

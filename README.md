@@ -18,13 +18,29 @@ __BINKS_LOCAL_PATH__ : Path to save images, default: `/srv/Binks/local`
 
 __BINKS_LOCAL_TIMEOUT__ : Timeout of trying connect, default: `5`
 
+### Copyrights of the images
+
+Uses of these Bing images are restricted to wallpaper only. The specific copyright infomations will be saved in the `BINKS_LOCAL_PATH` directory named `COPYRIGHTS.json` with the schema like:
+
+```json
+[{
+    "image": "AutumnNeuschwanstein",
+    "copyright": "Neuschwanstein Castle in southern Bavaria, Germany (© Boris Jordan Photography/Getty Images)"
+},
+...]
+```
+
+@see [scripts/example.json]('/scripts/example.json').
+
 ## APP
 
 TODO
 
 ## DEV
 
-### python3.7.0b2
+The local script is supposed to be portable and compatible with all versions of Python3 __without dependencies__.
+
+### App with python3.7.0b2
 
 With pyenv and virtualenvwrapper
 
