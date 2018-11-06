@@ -6,9 +6,17 @@ Or you can install the dropbox app. @see [APP](##APP)
 
 ## LOCAL
 
-Currently you can register a daily schedule with crontab. like;
+Currently you can register a schedule with _crontab_. like;
 
-`0 11 * * * /home/sy/.virtualenvs/binks/bin/python /home/sy/Devel/Binks/scripts/local.py`
+`0 11 * * * /home/sy/Devel/Binks/scripts/local.py`
+
+### Configs with environment variables
+
+__BINKS_LOCAL_PERIOD__ : Period of the script (runs every _???_ days), default: `1`
+
+__BINKS_LOCAL_PATH__ : Path to save images, default: `/srv/Binks/local`
+
+__BINKS_LOCAL_TIMEOUT__ : Timeout of trying connect, default: `5`
 
 ## APP
 

@@ -1,4 +1,11 @@
-#
+#!/usr/bin/python3
+
+"""
+Author: Sy<somarl@live.com>
+LICENSE: MIT License  Copyright (c) 2018 Sy
+Tested compatible Python versions: 3.7.0b2 / 3.6.0 / 3.5.2 on Linux4.4.0
+Please fire an issue at https://github.com/somarlyonks/Binks/issue if it crashes under Python3
+"""
 
 from datetime import datetime
 import json
@@ -8,20 +15,27 @@ from urllib import request as Q, error as E
 
 
 PROTOCOL = 'https'
-HOST_URL = f'{PROTOCOL}://www.bing.com'
+HOST_URL = PROTOCOL + '://www.bing.com'
 
-FREQUENCY = os.getenv('BINKS_LOCAL_FREQUENCY', 1)
+PERIOD = os.getenv('BINKS_LOCAL_PERIOD', 1)
 LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', '/srv/Binks/local')
-TIMEOUT = os.getenv('BINKS_LOCAL_TIMEOUT', 5)
+TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 5))
 
-API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(FREQUENCY)
+API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(PERIOD)
+
+
+def toURI(i):
+    return HOST_URL + i
 
 
 def GET(url):
-    with Q.urlopen(HOST_URL + url, timeout=TIMEOUT) as connect:
+    with Q.urlopen(toURI(url), timeout=TIMEOUT) as connect:
         if connect.status is not 200:
             raise E.HTTPError
-        return connect.read()
+        content = connect.read()
+        if connect.headers.get_content_type() == 'application/json':
+            content = content.decode(connect.headers.get_content_charset())
+        return content
 
 
 def persist(raw, filename):
@@ -31,7 +45,7 @@ def persist(raw, filename):
 
 
 def download(url):
-    print(f'[BINKS]: Downloading image - {HOST_URL + url}')
+    print('[BINKS]: Downloading image -', toURI(url))
     if not url.endswith('.jpg'):
         return print('[BINKS]: Error - wrong extension name.')
 
@@ -41,11 +55,11 @@ def download(url):
 
 
 def main():
-    print(f'[BINKS]: Date: {datetime.now().strftime("%c")}')
+    print('[BINKS]: Date:', datetime.now().strftime("%c"))
     try:
         r = GET(API)
     except E.HTTPError:
-        print(f'[BINKS]: Error - failed to fetch api')
+        print('[BINKS]: Error - failed to fetch api')
         sys.exit(1)
     j = json.loads(r or '{}')
     failed = []
@@ -53,7 +67,7 @@ def main():
         try:
             download(img.get('url', ''))
         except E.HTTPError:
-            print(f'[BINKS]: Error - wrong response for {HOST_URL + img}')
+            print('[BINKS]: Error - wrong response for', toURI(img))
             failed.append(img)
     if len(failed):
         print('[BINKS]: retrying the failed tasks.')
@@ -62,9 +76,9 @@ def main():
                 download(img.get('url', ''))
                 failed.pop()
             except E.HTTPError:
-                print(f'[BINKS]: Error - wrong response for {HOST_URL + img} again.')
+                print('[BINKS]: Error - wrong response for ', toURI(img), 'again.')
 
-    print(f'[BINKS]: Total: {FREQUENCY} , Failed: {len(failed)}')
+    print('[BINKS]: Done. Total:', PERIOD, ' Failed:', len(failed))
     sys.exit(0)
 
 
