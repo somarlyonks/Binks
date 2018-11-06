@@ -43,22 +43,20 @@ def GET(url):
         return content
 
 
-def persist(raw, filename):
-    filepath = os.path.join(LOCAL_PATH, filename)
-    if os.path.exists(filepath):
-        raise Duplicated
-    with open(filepath, 'wb') as img:
-        img.write(raw)
-
-
 def download(url, name):
+    """intentionally print the image url first and then raise exceptions"""
     print('[BINKS]: Downloading image -', toURI(url))
     if not url.endswith('.jpg'):
         return print('[BINKS]: Error - wrong extension name.')
 
     name += '.jpg'
+    filepath = os.path.join(LOCAL_PATH, name)
+    if os.path.exists(filepath):
+        raise Duplicated
+
     data = GET(url)
-    persist(data, name)
+    with open(filepath, 'wb') as img:
+        img.write(data)
 
 
 def record(img, imgname):
@@ -109,9 +107,11 @@ def main():
     except E.HTTPError:
         print('[BINKS]: Error - failed to fetch api')
         sys.exit(1)
+
     j = json.loads(r or '{}')
     images = j.get('images', [])
     failed = []
+
     worker(images, failed)
     worker(failed[:], failed, retrying=True)
 
