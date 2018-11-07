@@ -86,7 +86,7 @@ def record(img, imgname):
             f.write('[' + os.linesep + ']')
 
     lines = open(filepath, 'rt').readlines()
-    line = '{"image": "' + imgname + '", ' + '"copyright": "' + cpright + '"}'
+    line = json.dumps({'image': imgname, 'copyright': cpright}, sort_keys=True)
     if len(lines) != 2:
         line += ','
     line += os.linesep
