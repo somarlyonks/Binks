@@ -16,19 +16,34 @@ import os
 import sys
 
 
+CEND = '\33[0m'
+COLORED = lambda color: lambda str: color + str + CEND  # noqa
+CRED = COLORED('\33[91m')
+CGREEN = COLORED('\33[92m')
+CYELLOW = COLORED('\33[93m')
+
 PY_VERSION = sys.version_info
 try:
     assert PY_VERSION.major == 3
     from urllib import request as Q, error as E, parse as P
     P.ParseResult
 except AssertionError:
-    sys.stderr.write('[BINKS]: Error - Python3 required')
+    sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required')
     sys.exit(1)
 try:
     assert PY_VERSION.minor >= 3  # need more test
-    print = partial(print, flush=True)
+    _print = partial(print, flush=True)
+
+    def print(*args, **kwargs):
+        level = kwargs.pop('level', None)
+        if level == 'error':
+            _print('[BINKS]', CRED('Error') + ' -', *args, **kwargs)
+        elif level == 'warning':
+            _print('[BINKS]', CYELLOW('Warning') + ' -', *args, **kwargs)
+        else:
+            _print('[BINKS]', *args, **kwargs)
 except AssertionError:
-    sys.stdout.write('[BINKS]: Warnning - Python3.3.0+ prefered')
+    sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered')
 
 
 SCHEME = 'https'
@@ -62,9 +77,9 @@ def GET(url):
 
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
-    print('[BINKS]: Downloading image -', toURI(url))
+    print('Downloading image:', toURI(url))
     if not url.endswith('.jpg'):
-        return print('[BINKS]: Error - wrong extension name.')
+        return print('wrong extension name', level='error')
 
     name += '.jpg'
     filepath = os.path.join(LOCAL_PATH, name)
@@ -99,7 +114,7 @@ def record(img, imgname):
 def worker(imgs, failed, retrying=False):
     """impure: dynamically changing contexted failed list"""
     if retrying and len(failed):
-        print('[BINKS]: Retrying the failed tasks.')
+        print('Retrying the failed tasks')
     for img in imgs:
         try:
             url = img.get('url', '')
@@ -108,21 +123,21 @@ def worker(imgs, failed, retrying=False):
             if retrying:
                 failed.pop()
         except E.HTTPError:
-            print('[BINKS]: Error - wrong response for', toURI(url))
+            print('wrong response for', toURI(url), level='error')
             if not retrying:
                 failed.append(img)
         except Duplicated:
-            print('[BINKS]: Image exists -', os.path.join(LOCAL_PATH, name + '.jpg'))
+            print('image exists:', os.path.join(LOCAL_PATH, name + '.jpg'), level='warning')
         else:
             record(img, name)
 
 
 def main():
-    print('[BINKS]: Date:', datetime.now().strftime("%c"))
+    print(CGREEN('Date'), '-', datetime.now().strftime("%c"))
     try:
         r = GET(API)
     except E.HTTPError:
-        print('[BINKS]: Error - failed to fetch api')
+        print('failed to fetch api', level='error')
         sys.exit(1)
 
     j = json.loads(r or '{}')
@@ -132,7 +147,7 @@ def main():
     worker(images, failed)
     worker(failed[:], failed, retrying=True)
 
-    print('[BINKS]: Done. Total:', len(images), ' Failed:', len(failed))
+    print(CGREEN('Done'), '-', 'Total:', len(images), ' Failed:', len(failed))
     sys.exit(0)
 
 
