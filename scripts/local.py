@@ -19,7 +19,8 @@ import sys
 PY_VERSION = sys.version_info
 try:
     assert PY_VERSION.major == 3
-    from urllib import request as Q, error as E
+    from urllib import request as Q, error as E, parse as P
+    P.ParseResult
 except AssertionError:
     sys.stderr.write('[BINKS]: Error - Python3 required')
     sys.exit(1)
@@ -30,8 +31,8 @@ except AssertionError:
     sys.stdout.write('[BINKS]: Warnning - Python3.3.0+ prefered')
 
 
-PROTOCOL = 'https'
-HOST_URL = PROTOCOL + '://www.bing.com'
+SCHEME = 'https'
+HOST_URL = SCHEME + '://' + 'www.bing.com'
 
 PERIOD = os.getenv('BINKS_LOCAL_PERIOD', 1)
 LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', '/srv/Binks/local')
@@ -46,7 +47,7 @@ class Duplicated(ValueError):
 
 
 def toURI(i):
-    return HOST_URL + i
+    return P.urljoin(HOST_URL, i)
 
 
 def GET(url):
