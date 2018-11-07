@@ -26,7 +26,6 @@ PY_VERSION = sys.version_info
 try:
     assert PY_VERSION.major == 3
     from urllib import request as Q, error as E, parse as P
-    P.ParseResult
 except AssertionError:
     sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required')
     sys.exit(1)
@@ -78,7 +77,7 @@ def GET(url):
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
     print('Downloading image:', toURI(url))
-    if not url.endswith('.jpg'):
+    if not url.endswith('.jpg'):  # just for guard, there's no need to raise for it
         return print('wrong extension name', level='error')
 
     name += '.jpg'
@@ -128,6 +127,8 @@ def worker(imgs, failed, retrying=False):
                 failed.append(img)
         except Duplicated:
             print('image exists:', os.path.join(LOCAL_PATH, name + '.jpg'), level='warning')
+            if retrying:
+                failed.pop()
         else:
             record(img, name)
 
