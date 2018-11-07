@@ -30,19 +30,31 @@ except AssertionError:
     sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required')
     sys.exit(1)
 try:
-    assert PY_VERSION.minor >= 3  # need more test
+    assert PY_VERSION.minor >= 3
     _print = partial(print, flush=True)
-
-    def print(*args, **kwargs):
-        level = kwargs.pop('level', None)
-        if level == 'error':
-            _print('[BINKS]', CRED('Error') + ' -', *args, **kwargs)
-        elif level == 'warning':
-            _print('[BINKS]', CYELLOW('Warning') + ' -', *args, **kwargs)
-        else:
-            _print('[BINKS]', *args, **kwargs)
 except AssertionError:
     sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered')
+    __print = print
+
+    def _print(*args, **kwargs):
+        flush = kwargs.pop('flush', True)
+        __print(*args, **kwargs)
+        if flush:
+            kwargs.get('file', sys.stdout).flush()
+
+
+def print(*args, **kwargs):
+    level = kwargs.pop('level', None)
+    if level == 'error':
+        _print('[BINKS]', CRED('Error'), '-', *args, **kwargs)
+    elif level == 'warning':
+        _print('[BINKS]', CYELLOW('Warning'), '-', *args, **kwargs)
+    elif level == 'info':
+        # info, *args = args  # syntax error in py2
+        info, args = args[0], args[1:]
+        _print('[BINKS]', CGREEN(info), '-', *args, **kwargs)
+    else:
+        _print('[BINKS]', *args, **kwargs)
 
 
 SCHEME = 'https'
@@ -134,7 +146,7 @@ def worker(imgs, failed, retrying=False):
 
 
 def main():
-    print(CGREEN('Date'), '-', datetime.now().strftime("%c"))
+    print('Date', datetime.now().strftime('%c'), level='info')
     try:
         r = GET(API)
     except E.HTTPError:
@@ -148,7 +160,7 @@ def main():
     worker(images, failed)
     worker(failed[:], failed, retrying=True)
 
-    print(CGREEN('Done'), '-', 'Total:', len(images), ' Failed:', len(failed))
+    print('Done', 'Total:', len(images), ' Failed:', len(failed), level='info')
     sys.exit(0)
 
 
