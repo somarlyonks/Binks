@@ -1,5 +1,17 @@
 # HELPERS
 
+The app server: scheduled every ->
+
+- download the image from bing
+- read user configs from mongodb
+- generate pool
+- push images to user's buffer folder(mailto)
+
+## locations
+
+/usr/local/binks
+/user/local/etc/binks.conf
+
 ## interface
 
 binks
@@ -14,6 +26,9 @@ binks email
 binks email somarl@live.com
 binks schedule Sunday
 binks schedule everyday
+
+todo:
+
 binks threshold 30
 binks locale en_US
 
@@ -37,3 +52,32 @@ return: {
 }
 
 dbx = dropbox.Dropbox('3UA-BEejvnAAAAAAAAAASSB0DXolkWxVZZyLpU0cKLqfAik-muY2bXvYIFFBMlfK')
+
+## mongo
+
+### user
+
+It's quite easy:
+
+```json
+{
+    "name": "username",
+    "token": "dbxtoken",
+    "email": "email",
+    "schedule": "Monday"
+}
+```
+
+### images
+
+I'm not sure how long will bing keep the urls alive. But it looks like a bad idea to linkage the images in mails to my server.
+
+That means the server maybe has to backup the meta infomations of the daily images, so I need just another mongo sheet, the schema is quite easy:
+
+```json
+{
+    "date": "date",
+    "image": "imagename",
+    "meta": "resp.image"
+}
+```
