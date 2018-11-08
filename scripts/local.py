@@ -31,14 +31,14 @@ except AssertionError:
     sys.exit(1)
 try:
     assert PY_VERSION.minor >= 3
-    _print = partial(print, flush=True)
+    _print = partial(print, '[BINKS]', flush=True)
 except AssertionError:
     sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered')
     __print = print
 
     def _print(*args, **kwargs):
         flush = kwargs.pop('flush', True)
-        __print(*args, **kwargs)
+        __print('[BINKS]', *args, **kwargs)
         if flush:
             kwargs.get('file', sys.stdout).flush()
 
@@ -46,15 +46,13 @@ except AssertionError:
 def print(*args, **kwargs):
     level = kwargs.pop('level', None)
     if level == 'error':
-        _print('[BINKS]', CRED('Error'), '-', *args, **kwargs)
+        _print(CRED('Error'), '-', *args, **kwargs)
     elif level == 'warning':
-        _print('[BINKS]', CYELLOW('Warning'), '-', *args, **kwargs)
+        _print(CYELLOW('Warning'), '-', *args, **kwargs)
     elif level == 'info':
-        # info, *args = args  # syntax error in py2
-        info, args = args[0], args[1:]
-        _print('[BINKS]', CGREEN(info), '-', *args, **kwargs)
+        _print(CGREEN(args[0]), '-', *args[1:], **kwargs)
     else:
-        _print('[BINKS]', *args, **kwargs)
+        _print(*args, **kwargs)
 
 
 SCHEME = 'https'
