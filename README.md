@@ -37,6 +37,14 @@ Uses of these Bing images are restricted to wallpaper only. The specific copyrig
 
 @see [scripts/example.json]('scripts/example.json').
 
+### Customizing & for sites other than Bing
+
+The local script is flexible, you can always directly change it as you like.
+
+As uses of Bing images are restricted, you may want to deploy the script for other sites with CC-like liscenses. Check the [scripts/magdeleine.py] as an example for customizing which downloads images from [magdeleine.co](https://magdeleine.co).
+
+You may find that I used `requests` and specify the virtualenv in that script and delete all the verbose contents for compatiblities. You can also use `xpath`/`BeautifulSoup`/`PyQuery` .etc parser libs instead of the toy `MgParser` in the script.
+
 ## APP
 
 TODO
