@@ -27,13 +27,13 @@ try:
     assert PY_VERSION.major == 3
     from urllib import request as Q, error as E, parse as P
 except AssertionError:
-    sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required')
+    sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required\n')
     sys.exit(1)
 try:
     assert PY_VERSION.minor >= 3
     _print = partial(print, '[BINKS]', flush=True)
 except AssertionError:
-    sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered')
+    sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered\n')
     __print = print
 
     def _print(*args, **kwargs):
