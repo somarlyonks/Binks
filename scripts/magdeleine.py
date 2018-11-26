@@ -110,8 +110,8 @@ def record(img, author, avatar):
 
 def worker(parsed):
     url = parsed.mg_url
+    name = url.split('/')[-1]
     try:
-        name = url.split('/')[-1]
         download(url, name)
     except Q.HTTPError:
         print('wrong response for', url, level='error')
