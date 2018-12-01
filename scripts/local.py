@@ -11,48 +11,59 @@ from __future__ import print_function
 
 from datetime import datetime
 from functools import partial
+import getpass
 import json
 import os
+import socket
 import sys
 
 
 CEND = '\33[0m'
-COLORED = lambda color: lambda str: color + str + CEND  # noqa
-CRED = COLORED('\33[91m')
-CGREEN = COLORED('\33[92m')
-CYELLOW = COLORED('\33[93m')
+F_COLORED = lambda color: lambda str: color + str + CEND  # noqa
+CRED = F_COLORED('\33[91m')
+CGREEN = F_COLORED('\33[92m')
+CYELLOW = F_COLORED('\33[93m')
+
+PID = os.getpid()
+PID_SEG = 'BINKS[' + str(PID) + ']:'
+HOSTNAME = socket.gethostname()
+USERNAME = getpass.getuser()
+USERNAME_SEG = '(' + USERNAME + ')'
+F_GETTIME = lambda : ' '.join(datetime.now().ctime().split(' ')[1: -1])  # noqa
+F_STD_SEGS = lambda : F_GETTIME() + ' ' + HOSTNAME + ' ' + PID_SEG + ' ' + USERNAME_SEG  # noqa
 
 PY_VERSION = sys.version_info
 try:
     assert PY_VERSION.major == 3
     from urllib import request as Q, error as E, parse as P
 except AssertionError:
-    sys.stderr.write('[BINKS] ' + CRED('Error') + ' - Python3 required\n')
+    sys.stderr.write(F_STD_SEGS() + ' ' + CRED('Error') + ' - Python3 required\n')
     sys.exit(1)
 try:
     assert PY_VERSION.minor >= 3
-    _print = partial(print, '[BINKS]', flush=True)
+    _print = partial(print, flush=True)
 except AssertionError:
-    sys.stdout.write('[BINKS] ' + CYELLOW('Warning') + '- Python3.3.0+ prefered\n')
-    __print = print
+    sys.stdout.write(F_STD_SEGS() + ' ' + CYELLOW('Warning') + '- Python3.3.0+ prefered\n')
+    _print_ = print
 
     def _print(*args, **kwargs):
         flush = kwargs.pop('flush', True)
-        __print('[BINKS]', *args, **kwargs)
+        _print_(*args, **kwargs)
         if flush:
             kwargs.get('file', sys.stdout).flush()
 
 
 def print(*args, **kwargs):
     level = kwargs.pop('level', None)
+    __print = partial(_print, F_STD_SEGS())
     if level == 'error':
-        _print(CRED('Error'), '-', *args, **kwargs)
+        __print(CRED('Error'), '-', *args, **kwargs)
     elif level == 'warning':
-        _print(CYELLOW('Warning'), '-', *args, **kwargs)
+        __print(CYELLOW('Warning'), '-', *args, **kwargs)
     elif level == 'info':
-        _print(CGREEN(args[0]), '-', *args[1:], **kwargs)
+        __print(CGREEN(args[0]), '-', *args[1:], **kwargs)
     else:
-        _print(*args, **kwargs)
+        __print(*args, **kwargs)
 
 
 SCHEME = 'https'
@@ -144,7 +155,7 @@ def worker(imgs, failed, retrying=False):
 
 
 def main():
-    print('Date', datetime.now().strftime('%c'), level='info')
+    print('Begin', USERNAME_SEG, level='info')
     try:
         r = GET(API)
     except E.HTTPError:

@@ -8,8 +8,10 @@ For personal use actually. Place it here to illustrate how to customize
 the local.py for specific sites.
 """
 
+import getpass
 import json
 import os
+import socket
 import sys
 from datetime import datetime
 from functools import partial
@@ -19,27 +21,37 @@ import requests as Q
 
 
 CEND = '\33[0m'
-COLORED = lambda color: lambda str: color + str + CEND  # noqa
-CRED = COLORED('\33[91m')
-CGREEN = COLORED('\33[92m')
-CYELLOW = COLORED('\33[93m')
+F_COLORED = lambda color: lambda str: color + str + CEND  # noqa
+CRED = F_COLORED('\33[91m')
+CGREEN = F_COLORED('\33[92m')
+CYELLOW = F_COLORED('\33[93m')
+
+PID = os.getpid()
+PID_SEG = 'MGDL[' + str(PID) + ']:'
+HOSTNAME = socket.gethostname()
+USERNAME = getpass.getuser()
+USERNAME_SEG = '(' + USERNAME + ')'
+F_GETTIME = lambda : ' '.join(datetime.now().ctime().split(' ')[1: -1])  # noqa
+F_STD_SEGS = lambda : F_GETTIME() + ' ' + HOSTNAME + ' ' + PID_SEG + ' ' + USERNAME_SEG  # noqa
 
 
-_print = partial(print, '[MGDL]', flush=True)
+_print = partial(print, flush=True)
 
 
 def print(*args, **kwargs):
+    kwargs.pop('flush', None)
     level = kwargs.pop('level', None)
+    __print = partial(_print, F_STD_SEGS())
 
     if level == 'error':
-        _print(CRED('Error'), '-', *args, **kwargs)
+        __print(CRED('Error'), '-', *args, **kwargs)
     elif level == 'warning':
-        _print(CYELLOW('Warning'), '-', *args, **kwargs)
+        __print(CYELLOW('Warning'), '-', *args, **kwargs)
     elif level == 'info':
         info, *args = args
-        _print(CGREEN(info), '-', *args, **kwargs)
+        __print(CGREEN(info), '-', *args, **kwargs)
     else:
-        _print(*args, **kwargs)
+        __print(*args, **kwargs)
 
 
 class MgParser(HTMLParser):
@@ -123,7 +135,7 @@ def worker(parsed):
 
 
 def main():
-    print('Date', datetime.now().strftime('%c'), level='info')
+    print('Begin', USERNAME_SEG, level='info')
     try:
         r = GET(HOST_URL)
     except Q.HTTPError:
