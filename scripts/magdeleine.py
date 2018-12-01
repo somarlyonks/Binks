@@ -22,9 +22,9 @@ import requests as Q
 
 CEND = '\33[0m'
 F_COLORED = lambda color: lambda str: color + str + CEND  # noqa
-CRED = F_COLORED('\33[91m')
-CGREEN = F_COLORED('\33[92m')
-CYELLOW = F_COLORED('\33[93m')
+F_CRED = F_COLORED('\33[91m')
+F_CGREEN = F_COLORED('\33[92m')
+F_CYELLOW = F_COLORED('\33[93m')
 
 PID = os.getpid()
 PID_SEG = 'MGDL[' + str(PID) + ']:'
@@ -44,12 +44,12 @@ def print(*args, **kwargs):
     __print = partial(_print, F_STD_SEGS())
 
     if level == 'error':
-        __print(CRED('Error'), '-', *args, **kwargs)
+        __print(F_CRED('Error'), '-', *args, **kwargs)
     elif level == 'warning':
-        __print(CYELLOW('Warning'), '-', *args, **kwargs)
+        __print(F_CYELLOW('Warning'), '-', *args, **kwargs)
     elif level == 'info':
         info, *args = args
-        __print(CGREEN(info), '-', *args, **kwargs)
+        __print(F_CGREEN(info), '-', *args, **kwargs)
     else:
         __print(*args, **kwargs)
 
