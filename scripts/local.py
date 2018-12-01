@@ -20,9 +20,9 @@ import sys
 
 CEND = '\33[0m'
 F_COLORED = lambda color: lambda str: color + str + CEND  # noqa
-CRED = F_COLORED('\33[91m')
-CGREEN = F_COLORED('\33[92m')
-CYELLOW = F_COLORED('\33[93m')
+F_CRED = F_COLORED('\33[91m')
+F_CGREEN = F_COLORED('\33[92m')
+F_CYELLOW = F_COLORED('\33[93m')
 
 PID = os.getpid()
 PID_SEG = 'BINKS[' + str(PID) + ']:'
@@ -37,13 +37,13 @@ try:
     assert PY_VERSION.major == 3
     from urllib import request as Q, error as E, parse as P
 except AssertionError:
-    sys.stderr.write(F_STD_SEGS() + ' ' + CRED('Error') + ' - Python3 required\n')
+    sys.stderr.write(F_STD_SEGS() + ' ' + F_CRED('Error') + ' - Python3 required\n')
     sys.exit(1)
 try:
     assert PY_VERSION.minor >= 3
     _print = partial(print, flush=True)
 except AssertionError:
-    sys.stdout.write(F_STD_SEGS() + ' ' + CYELLOW('Warning') + '- Python3.3.0+ prefered\n')
+    sys.stdout.write(F_STD_SEGS() + ' ' + F_CYELLOW('Warning') + '- Python3.3.0+ prefered\n')
     _print_ = print
 
     def _print(*args, **kwargs):
@@ -57,11 +57,11 @@ def print(*args, **kwargs):
     level = kwargs.pop('level', None)
     __print = partial(_print, F_STD_SEGS())
     if level == 'error':
-        __print(CRED('Error'), '-', *args, **kwargs)
+        __print(F_CRED('Error'), '-', *args, **kwargs)
     elif level == 'warning':
-        __print(CYELLOW('Warning'), '-', *args, **kwargs)
+        __print(F_CYELLOW('Warning'), '-', *args, **kwargs)
     elif level == 'info':
-        __print(CGREEN(args[0]), '-', *args[1:], **kwargs)
+        __print(F_CGREEN(args[0]), '-', *args[1:], **kwargs)
     else:
         __print(*args, **kwargs)
 
