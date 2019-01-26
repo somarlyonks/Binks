@@ -74,6 +74,7 @@ LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', '/srv/Binks/local')
 TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 5))
 
 API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(PERIOD)
+RECORD_PATH = os.path.join(LOCAL_PATH, 'COPYRIGHTS.json')
 
 
 class Duplicated(ValueError):
@@ -95,39 +96,46 @@ def GET(url):
         return content
 
 
+def check_existence(name):
+    if os.path.exists(os.path.join(LOCAL_PATH, name + '.jpg')):
+        raise Duplicated
+    if os.path.exists(RECORD_PATH):
+        with open(RECORD_PATH, 'rt') as f:
+            records = json.load(f)
+            for record in records:
+                if record.get('image', '') == name:
+                    raise Duplicated
+
+
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
     print('Downloading image:', toURI(url))
     if not url.endswith('.jpg'):  # just for guard, there's no need to raise for it
         return print('wrong extension name', level='error')
 
-    name += '.jpg'
-    filepath = os.path.join(LOCAL_PATH, name)
-    if os.path.exists(filepath):
-        raise Duplicated
+    check_existence(name)
 
+    filepath = os.path.join(LOCAL_PATH, name + '.jpg')
     data = GET(url)
     with open(filepath, 'wb') as img:
         img.write(data)
 
 
 def record(img, imgname):
-    filename = 'COPYRIGHTS.json'
-    filepath = os.path.join(LOCAL_PATH, filename)
     cpright = img.get('copyright', '')
 
-    if not os.path.exists(filepath):
-        with open(filepath, 'wt') as f:
+    if not os.path.exists(RECORD_PATH):
+        with open(RECORD_PATH, 'wt') as f:
             f.write('[' + os.linesep + ']')
 
-    lines = open(filepath, 'rt').readlines()
+    lines = open(RECORD_PATH, 'rt').readlines()
     line = json.dumps({'image': imgname, 'copyright': cpright}, sort_keys=True)
     if len(lines) != 2:
         line += ','
     line += os.linesep
     lines.insert(1, line)
 
-    with open(filepath, 'wt') as f:
+    with open(RECORD_PATH, 'wt') as f:
         f.writelines(lines)
 
 
@@ -174,4 +182,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e, level='error')

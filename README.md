@@ -13,7 +13,7 @@ This script is used by Binks dropbox app server to fetch raw pictures. As it's d
 ```cron
 BINKS_LOCAL_PATH=/home/sy/Dropbox/bing/buffer
 0 10 * * * root /home/sy/Desktop/sy/env/Binks/scripts/local.py >> /var/log/cron.log 2>&1
-0 10 * * 7 root export BINKS_LOCAL_PERIOD=7 && /home/sy/Desktop/sy/env/Binks/scripts/local.py >> /var/log/cron.log 2>&1
+1 10 * * 7 root export BINKS_LOCAL_PERIOD=7 && /home/sy/Desktop/sy/env/Binks/scripts/local.py >> /var/log/cron.log 2>&1
 ```
 
 to the `/etc/crontab`. You can cat log in `/var/log/cron.log` like:
@@ -54,7 +54,7 @@ Uses of these Bing images are restricted to wallpaper only. The specific copyrig
 }]
 ```
 
-@see [scripts/example.json]('scripts/example.json').
+@see [scripts/example.json](scripts/example.json).
 
 ### Customizing & for sites other than Bing
 
