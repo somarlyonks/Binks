@@ -82,6 +82,10 @@ class Duplicated(ValueError):
     pass
 
 
+class NameParseError(ValueError):
+    pass
+
+
 def toURI(i):
     return P.urljoin(HOST_URL, i)
 
@@ -110,7 +114,7 @@ def check_existence(name):
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
     print('Downloading image:', toURI(url))
-    if not url.endswith('.jpg'):  # just for guard, there's no need to raise for it
+    if not name.endswith('.jpg'):
         return print('wrong extension name', level='error')
 
     check_existence(name)
@@ -119,6 +123,15 @@ def download(url, name):
     data = GET(url)
     with open(filepath, 'wb') as img:
         img.write(data)
+
+
+def parse_url_name(url):
+    try:
+         _id = P.parse_qs(P.urlparse(url).query)['id'][0]  # don't worry to be aggressive
+        name = _id.split('.')[1].split('_')[0] + '.jpg'
+        return name
+    except IndexError:
+        raise NameParseError
 
 
 def record(img, imgname):
@@ -146,7 +159,7 @@ def worker(imgs, failed, retrying=False):
     for img in imgs:
         try:
             url = img.get('url', '')
-            name = url.split('/')[-1].split('_')[0]
+            name = parse_url_name(url)
             download(url, name)
             if retrying:
                 failed.pop()
@@ -158,6 +171,9 @@ def worker(imgs, failed, retrying=False):
             print('image exists:', os.path.join(LOCAL_PATH, name + '.jpg'), level='warning')
             if retrying:
                 failed.pop()
+        except NameParseError:
+            if not retrying:  # no need to retry
+                print('url structure changed', url, level='error')
         else:
             record(img, name)
 
@@ -172,6 +188,7 @@ def main():
 
     j = json.loads(r or '{}')
     images = j.get('images', [])
+    print('images', images)
     failed = []
 
     worker(images, failed)

@@ -37,7 +37,7 @@ Or you may access to my [Dropbox/bing](https://www.dropbox.com/sh/t89049ikchjzmz
 
 ### Configs with environment variables
 
-__BINKS_LOCAL_PERIOD__ : Period of the script (runs every _???_ days), default: `1`
+__BINKS_LOCAL_PERIOD__ : Period of the script (runs every _???_ days), default: `1`, should be within: `[1, 8] & Z`
 
 __BINKS_LOCAL_PATH__ : Path to save images, default: `/srv/Binks/local`
 
