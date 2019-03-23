@@ -174,6 +174,11 @@ def worker(imgs, failed, retrying=False):
         except NameParseError:
             if not retrying:  # no need to retry
                 print('url structure changed', url, level='error')
+                print(
+                    'expected url structer',
+                    '/th?id=OHR.SpainRioTinto_EN-CN1970199024_1920x1080.jpg&rf=NorthMale_1920x1080.jpg&pid=hp',
+                    level='info'
+                    )
         else:
             record(img, name)
 
@@ -188,7 +193,6 @@ def main():
 
     j = json.loads(r or '{}')
     images = j.get('images', [])
-    print('images', images)
     failed = []
 
     worker(images, failed)
