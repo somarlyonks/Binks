@@ -3,8 +3,6 @@
 """
 Author: Sy<somarl@live.com>
 LICENSE: MIT License  Copyright (c) 2018 Sy
-Tested compatible Python versions: 3.7.0b2 / 3.6.0 / 3.5.2 on Linux4.4.0
-Please fire an issue at https://github.com/somarlyonks/Binks/issue if it crashes under Python3
 """
 
 from __future__ import print_function
@@ -70,8 +68,8 @@ SCHEME = 'https'
 HOST_URL = SCHEME + '://' + 'www.bing.com'
 
 PERIOD = os.getenv('BINKS_LOCAL_PERIOD', 1)
-LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', '/srv/Binks/local')
-TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 5))
+LOCAL_PATH = os.getenv('BINKS_LOCAL_PATH', os.path.expanduser('~/Dropbox/bing/buffer'))
+TIMEOUT = int(os.getenv('BINKS_LOCAL_TIMEOUT', 20))
 
 API = '/HPImageArchive.aspx?format=js&idx=0&mkt=en-US&ensearch=1&n=' + str(PERIOD)
 RECORD_PATH = os.path.join(LOCAL_PATH, 'COPYRIGHTS.json')
@@ -114,9 +112,6 @@ def check_existence(name):
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
     print('Downloading image:', toURI(url))
-    if not name.endswith('.jpg'):
-        return print('wrong extension name', level='error')
-
     check_existence(name)
 
     filepath = os.path.join(LOCAL_PATH, name + '.jpg')
@@ -127,8 +122,8 @@ def download(url, name):
 
 def parse_url_name(url):
     try:
-         _id = P.parse_qs(P.urlparse(url).query)['id'][0]  # don't worry to be aggressive
-        name = _id.split('.')[1].split('_')[0] + '.jpg'
+        _id = P.parse_qs(P.urlparse(url).query)['id'][0]  # don't worry to be aggressive
+        name = _id.split('.')[1].split('_')[0]
         return name
     except IndexError:
         raise NameParseError
@@ -178,7 +173,7 @@ def worker(imgs, failed, retrying=False):
                     'expected url structer',
                     '/th?id=OHR.SpainRioTinto_EN-CN1970199024_1920x1080.jpg&rf=NorthMale_1920x1080.jpg&pid=hp',
                     level='info'
-                    )
+                )
         else:
             record(img, name)
 
