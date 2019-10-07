@@ -89,8 +89,8 @@ def GET(url):
 def download(url, name):
     """intentionally print the image url first and then raise exceptions"""
     print('Downloading image:', url)
-    if not url.endswith('.jpg'):  # just for guard, there's no need to raise for it
-        return print('wrong extension name', level='error')
+    if not url.endswith('.jpg'):
+        print('wrong extension name', level='error')
 
     filepath = os.path.join(LOCAL_PATH, name)
     if os.path.exists(filepath):
