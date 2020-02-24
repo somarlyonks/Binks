@@ -1,4 +1,4 @@
-#!/home/sy/.virtualenvs/binks/bin/python
+#!/home/sy/.pyenv/versions/dcode/bin/python
 
 """
 Author: Sy<somarl@live.com>
@@ -70,7 +70,7 @@ class MgParser(HTMLParser):
 SCHEME = 'https'
 HOST_URL = SCHEME + '://' + 'magdeleine.co'
 
-LOCAL_PATH = os.getenv('MAGDELEINE_DOWNLOADER_PATH', '/home/sy/Desktop')
+LOCAL_PATH = os.getenv('MAGDELEINE_DOWNLOADER_PATH', '/home/sy/Dropbox/bing/other')
 TIMEOUT = int(os.getenv('MAGDELEINE_DOWNLOADER_TIMEOUT', 25))
 
 
